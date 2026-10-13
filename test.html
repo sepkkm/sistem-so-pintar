@@ -77,6 +77,13 @@
 
         .chart-container { background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; position: relative; width: 100%; box-sizing: border-box;}
         .chart-title { text-align: center; font-size: 0.9em; font-weight: bold; margin-bottom: 10px; color: #333; }
+ 
+        /* GAYA BUTANG MAKLUM BALAS */
+        .btn-feedback { 
+            background-color: #ffc107; color: #333; border: none; padding: 12px 15px; width: auto; font-size: 1em; font-weight: bold; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            position: fixed; bottom: 20px; left: 20px; z-index: 1000; transition: background-color 0.3s; margin-top: 0;
+        }
+        .btn-feedback:active { background-color: #e0a800; }
     </style>
 </head>
 <body>
@@ -343,6 +350,9 @@
 
 <!-- BUTANG REFRESH TERAPUNG -->
 <button type="button" class="btn-refresh" onclick="dapatkanGPS()">🔄 GPS</button>
+    
+<!-- BUTANG MAKLUM BALAS TERAPUNG (GOOGLE FORM) -->
+<button type="button" class="btn-feedback" onclick="window.open('https://forms.gle/zFEDbhqfwUkkF5nZ9', '_blank')">💬 Feedback</button>
 
 <script>
     // MASUKKAN URL APPS SCRIPT ANDA DI SINI
