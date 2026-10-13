@@ -286,13 +286,13 @@
                 <!-- Kad 1: Latar Biru Cair -->
                 <div class="card card-biru">
                     <h2 id="d_rekod">0</h2>
-                    <h3>Total Keseluruhan SO</h3>
+                    <h3>Jumlah Keseluruhan SO</h3>
                 </div>
                 
                 <!-- Kad 2: Latar Hijau Cair -->
                 <div class="card card-hijau">
                     <h2 id="d_aktiviti">0</h2>
-                    <h3>Pemasangan Keseluruhan</h3>
+                    <h3>Jumlah Pemasangan Keseluruhan</h3>
                 </div>
                 
                 <!-- Kad 3: Latar Putih (Nombor Biru) -->
@@ -316,7 +316,7 @@
 
             <!-- Graf 2: Tindakan Pasang vs Kutip -->
             <div class="chart-container">
-                <div class="chart-title">Peratusan Aktiviti</div>
+                <div class="chart-title">Peratusan Tindakan</div>
                 <canvas id="grafTindakan"></canvas>
             </div>
 
@@ -328,7 +328,7 @@
 
             <!-- Graf 4: Prestasi Mengikut Negeri -->
             <div class="chart-container">
-                <div class="chart-title">Jumlah Proses Mengikut Negeri</div>
+                <div class="chart-title">📍 Taburan SO & Pemasangan Mengikut Negeri</div>
                 <canvas id="grafNegeri"></canvas>
             </div>
         </div>
@@ -563,19 +563,45 @@
                 data: { labels: ['BAIK', 'MUSNAH', 'HILANG'], datasets: [{ data: [data.status.BAIK || 0, data.status.MUSNAH || 0, data.status.HILANG || 0], backgroundColor: ['#28a745', '#dc3545', '#ffc107'] }] }
             });
 
-            // 4. Graf Negeri (Bar)
+            // 4. Graf Negeri (Horizontal Bar Berganda)
             let negeriLabels = Object.keys(data.negeri); 
-            let negeriData = Object.values(data.negeri);
+            // Asingkan data Total SO dan Jumlah Pemasangan
+            let dataTotalSO = negeriLabels.map(n => data.negeri[n].total_so);
+            let dataPemasangan = negeriLabels.map(n => data.negeri[n].jumlah_pemasangan);
+
             myCharts.neg = new Chart(document.getElementById('grafNegeri'), {
-                type: 'bar',
-                data: { labels: negeriLabels, datasets: [{ label: 'Jumlah Proses', data: negeriData, backgroundColor: '#007bff' }] },
-                options: { scales: { y: { beginAtZero: true } } }
+                type: 'bar', // Tetap bar, tetapi kita tukar paksi di 'options'
+                data: { 
+                    labels: negeriLabels, 
+                    datasets: [
+                        { 
+                            label: 'Jumlah SO dipasang', 
+                            data: dataTotalSO, 
+                            backgroundColor: '#0d6efd' // Warna Biru
+                        },
+                        { 
+                            label: 'Jumlah pemasangan', 
+                            data: dataPemasangan, 
+                            backgroundColor: '#4caf50' // Warna Hijau
+                        }
+                    ] 
+                },
+                options: { 
+                    indexAxis: 'y', // TUKAR KEPADA MENDATAR (HORIZONTAL)
+                    scales: { 
+                        x: { beginAtZero: true } // Paksi X kini untuk nombor
+                    },
+                    responsive: true,
+                    plugins: {
+                        legend: { 
+                            position: 'bottom', // Letak petunjuk (legend) di bawah
+                            labels: {
+                                font: { size: 11, weight: 'bold' }
+                            }
+                        }
+                    }
+                }
             });
-        })
-        .catch(err => {
-            document.getElementById("dash_status").innerText = "❌ Gagal memuat turun data.";
-            document.getElementById("dash_status").style.color = "#dc3545";
-        });
     }
 
     function prosesKad(id_bekas, jalan_blok_asal, status, next_r) {
