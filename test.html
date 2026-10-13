@@ -49,10 +49,10 @@
         .btn-baik { background-color: #28a745; }
         .btn-musnah { background-color: #dc3545; }
         .btn-hilang { background-color: #fd7e14; }
-        .selesai { background: #e9ecef; border-color: #ccc; opacity: 0.6; pointer-events: none; }
+        .selesai { background: #e9ecef; border-color: #ccc; opacity: 0.85; }
         .selesai-teks { display: none; color: #28a745; font-weight: bold; margin-top: 10px; font-size: 0.9em; text-align: center; }
         .selesai .selesai-teks { display: block; }
-        .selesai .btn-kumpulan, .selesai .input-catatan-kad { display: none; }
+        .selesai .btn-kumpulan { display: none; } /* Hanya sembunyikan butang, mengekalkan input-catatan-kad */
         .btn-tarik { width: 100%; background: #6f42c1; color: white; padding: 12px; border: none; border-radius: 5px; font-weight: bold; margin-bottom: 15px; cursor: pointer; margin-top: 0; }
         .label-kitaran { font-size: 0.8em; color: #007bff; font-weight: bold; background: #e3f2fd; padding: 2px 6px; border-radius: 4px; }
         .bahagian-induk { background: #fdfbf7; padding: 15px; border-radius: 8px; border: 1px solid #e0dcd3; margin-bottom: 15px; }
@@ -253,9 +253,8 @@
         <label>Cari Lokaliti (Taip Kata Kunci):</label>
         <input type="text" id="lokaliti_manifest" list="senarai_lokaliti_pintar" placeholder="🔍 Taip nama lokaliti (Cth: SETIA)..." autocomplete="off" required>
         
-        <!-- Pangkalan Data Mini untuk Cadangan (Akan diisi oleh sistem) -->
+        <!-- Pangkalan Data Mini untuk Cadangan -->
         <datalist id="senarai_lokaliti_pintar">
-            <!-- Pilihan akan dimasukkan secara automatik di sini -->
         </datalist>
         
         <button type="button" class="btn-tarik" onclick="tarikSenarai()">⬇️ Tarik Senarai Bekas (R)</button>
@@ -278,25 +277,18 @@
             
             <!-- 4 Kad Ringkasan -->
             <div class="dash-cards">
-                <!-- Kad 1: Latar Biru Cair -->
                 <div class="card card-biru">
                     <h2 id="d_rekod">0</h2>
                     <h3>Jumlah Keseluruhan SO</h3>
                 </div>
-                
-                <!-- Kad 2: Latar Hijau Cair -->
                 <div class="card card-hijau">
                     <h2 id="d_aktiviti">0</h2>
                     <h3>Jumlah Pemasangan Keseluruhan</h3>
                 </div>
-                
-                <!-- Kad 3: Latar Putih (Nombor Biru) -->
                 <div class="card card-putih txt-biru">
                     <h2 id="d_negeri">0</h2>
                     <h3>Negeri Aktif</h3>
                 </div>
-                
-                <!-- Kad 4: Latar Putih (Nombor Oren) -->
                 <div class="card card-putih txt-oren">
                     <h2 id="d_lokaliti">0</h2>
                     <h3>Lokaliti Aktif</h3>
@@ -350,18 +342,15 @@
 <button type="button" class="btn-feedback" onclick="window.open('https://forms.gle/zFEDbhqfwUkkF5nZ9', '_blank')">💬 Feedback</button>
 
 <script>
-    // MASUKKAN URL APPS SCRIPT ANDA DI SINI
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxiTMBqJIfu2Se_p5_HtHrDlKxc4YFGl5e5yFfWIxapMlsrvbpU_I3G9IH7ckgt1V2H2g/exec"; 
 
     let latSemasa = "";
     let lngSemasa = "";
     let sejarahID = JSON.parse(localStorage.getItem("sejarahID_V2")) || {}; 
     
-    // Pembolehubah untuk Dashboard KPI Cache
     let myCharts = {}; 
     let grafDahPernahLoad = false; 
 
-    // DATA DAERAH RASMI MALAYSIA
     const senaraiDaerah = {
         "JOHOR": ["BATU PAHAT", "JOHOR BAHRU", "KLUANG", "KOTA TINGGI", "KULAIJAYA", "MERSING", "MUAR", "PONTIAN", "SEGAMAT", "LEDANG", "TANGKAK"],
         "KEDAH": ["BALING", "BANDAR BAHARU", "KOTA SETAR", "KUALA MUDA", "KUBANG PASU", "KULIM", "LANGKAWI", "PADANG TERAP", "PENDANG", "POKOK SENA", "SIK", "YAN"],
@@ -424,14 +413,11 @@
 
     function tarikSenaraiLokaliti() {
         let datalist = document.getElementById("senarai_lokaliti_pintar");
-        
-        // Semak jika ada dalam memori (Cache) supaya tak perlu tarik setiap kali buka
         let cacheLokaliti = JSON.parse(localStorage.getItem("lokalitiMaster_V1")) || [];
         if (cacheLokaliti.length > 0) {
             datalist.innerHTML = cacheLokaliti.map(lok => `<option value="${lok}">`).join("");
         }
 
-        // Tarik yang terbaharu dari server (Secara senyap di latar belakang)
         fetch(WEB_APP_URL + "?action=get_lokaliti")
         .then(res => res.json())
         .then(data => {
@@ -454,20 +440,16 @@
     }
 
     function bukaTab(namaTab) {
-        // 1. Tukar Tab Aktif
         document.querySelectorAll('.tab-content, .tab-btn').forEach(el => el.classList.remove('aktif'));
         document.getElementById('tab_' + namaTab).classList.add('aktif');
         document.getElementById('btn-tab-' + namaTab).classList.add('aktif');
         
-        // 2. Logik Sembunyi/Tunjuk Butang Sync & GPS
         let ruangStatus = document.getElementById("ruang_status_global");
         let btnRefreshGPS = document.querySelector(".btn-refresh");
         
         if (namaTab === 'dashboard') {
             if (ruangStatus) ruangStatus.classList.add('hidden'); 
             if (btnRefreshGPS) btnRefreshGPS.classList.add('hidden'); 
-            
-            // LOGIK PINTAR: Tarik server HANYA JIKA graf belum pernah di-load
             if (!grafDahPernahLoad) {
                 tarikDashboard();
             }
@@ -476,7 +458,6 @@
             if (btnRefreshGPS) btnRefreshGPS.classList.remove('hidden'); 
         }
 
-        // 3. Logik Carian Manifest
         if (namaTab === 'manifest') { 
             let inputSO = document.getElementById("cari_id_so"); 
             if(inputSO) {inputSO.value = ""; tapisCarianSO();} 
@@ -491,13 +472,15 @@
         data.forEach(item => {
             let isSelesai = sejarahSemasa.includes(item.id_bekas);
             let kelasSelesai = isSelesai ? "selesai" : "";
-            let r_semasa = item.r_semasa || 1; let next_r = r_semasa < 7 ? r_semasa + 1 : 7; 
+            let r_semasa = item.r_semasa || 1; 
+            let next_r = r_semasa < 7 ? r_semasa + 1 : 7; 
+            let valCatatanLama = item.catatan_lama || "";
             
             html += `
             <div class="kad-bekas ${kelasSelesai}" id="kad-${item.id_bekas}">
                 <h3>📦 ${item.id_bekas} <span class="label-kitaran">(Semasa: R${r_semasa})</span></h3>
                 <p>📍 Lokasi: ${item.jalan_blok.replace(/'/g, "")}</p>
-                <input type="text" id="catatan-${item.id_bekas}" class="input-catatan-kad" placeholder="Catatan / Ubah Spot...">
+                <input type="text" id="catatan-${item.id_bekas}" class="input-catatan-kad" value="${valCatatanLama}" placeholder="Catatan / Ubah Spot...">
                 <div class="btn-kumpulan">
                     <button type="button" class="btn-status btn-baik" onclick="prosesKad('${item.id_bekas}', '${item.jalan_blok}', 'BAIK', ${next_r})">BAIK</button>
                     <button type="button" class="btn-status btn-musnah" onclick="prosesKad('${item.id_bekas}', '${item.jalan_blok}', 'MUSNAH', ${next_r})">MUSNAH</button>
@@ -527,91 +510,64 @@
         .catch(err => { document.getElementById("ruang_kad_manifest").innerHTML = "<p style='text-align:center; color:red;'>❌ Ralat memuat turun.</p>"; });
     }
 
-    // ================= FUNGSI DASHBOARD (KPI) =================
     function tarikDashboard() {
         document.getElementById("dash_status").innerText = "Menyedut data...";
-        document.getElementById("dash_status").style.color = "#fd7e14"; // Warna oren masa loading
+        document.getElementById("dash_status").style.color = "#fd7e14"; 
         document.getElementById("ruang_dashboard").classList.add("hidden");
         
         fetch(WEB_APP_URL + "?action=dashboard")
         .then(res => res.json())
         .then(data => {
-            grafDahPernahLoad = true; // Kunci sistem supaya guna cache lepas ni
+            grafDahPernahLoad = true; 
             document.getElementById("dash_status").innerText = "Data Terkini 📊";
             document.getElementById("dash_status").style.color = "#007bff";
             document.getElementById("ruang_dashboard").classList.remove("hidden");
             
-            // ---> KOD BAHARU UNTUK MASA KEMAS KINI <---
             let now = new Date();
             let formatTarikh = now.toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' });
             let formatMasa = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
             document.getElementById("masa_kemaskini").innerText = "Kemas kini terakhir: " + formatTarikh + ", " + formatMasa;
-            // ------------------------------------------
 
-            // Masukkan Nombor di Kad Ringkasan
             document.getElementById("d_rekod").innerText = data.kad.jumlah_rekod || 0;
             document.getElementById("d_aktiviti").innerText = data.kad.aktiviti || 0;
             document.getElementById("d_lokaliti").innerText = data.kad.lokaliti_aktif || 0;
             document.getElementById("d_negeri").innerText = data.kad.negeri_aktif || 0;
 
-            // Bersihkan graf lama jika ada
             Object.values(myCharts).forEach(chart => { if (chart) chart.destroy(); });
 
-            // 1. Graf Organisasi (Doughnut)
             myCharts.org = new Chart(document.getElementById('grafOrganisasi'), {
                 type: 'doughnut',
                 data: { labels: ['KKM', 'KOMUNITI'], datasets: [{ data: [data.organisasi.KKM || 0, data.organisasi.KOMUNITI || 0], backgroundColor: ['#007bff', '#28a745'] }] }
             });
 
-            // 2. Graf Tindakan (Pie)
             myCharts.tin = new Chart(document.getElementById('grafTindakan'), {
                 type: 'pie',
                 data: { labels: ['PASANG (Baru)', 'KUTIP', 'GANTI'], datasets: [{ data: [data.tindakan.PASANG || 0, data.tindakan.KUTIP || 0, data.tindakan.GANTI || 0], backgroundColor: ['#6f42c1', '#fd7e14', '#17a2b8'] }] }
             });
 
-            // 3. Graf Status (Pie)
             myCharts.sta = new Chart(document.getElementById('grafStatus'), {
                 type: 'pie',
                 data: { labels: ['BAIK', 'MUSNAH', 'HILANG'], datasets: [{ data: [data.status.BAIK || 0, data.status.MUSNAH || 0, data.status.HILANG || 0], backgroundColor: ['#28a745', '#dc3545', '#ffc107'] }] }
             });
 
-            // 4. Graf Negeri (Horizontal Bar Berganda)
             let negeriLabels = Object.keys(data.negeri); 
-            // Asingkan data Total SO dan Jumlah Pemasangan
             let dataTotalSO = negeriLabels.map(n => data.negeri[n].total_so);
             let dataPemasangan = negeriLabels.map(n => data.negeri[n].jumlah_pemasangan);
 
             myCharts.neg = new Chart(document.getElementById('grafNegeri'), {
-                type: 'bar', // Tetap bar, tetapi kita tukar paksi di 'options'
+                type: 'bar', 
                 data: { 
                     labels: negeriLabels, 
                     datasets: [
-                        { 
-                            label: 'Jumlah SO dipasang', 
-                            data: dataTotalSO, 
-                            backgroundColor: '#0d6efd' // Warna Biru
-                        },
-                        { 
-                            label: 'Jumlah pemasangan', 
-                            data: dataPemasangan, 
-                            backgroundColor: '#4caf50' // Warna Hijau
-                        }
+                        { label: 'Jumlah SO dipasang', data: dataTotalSO, backgroundColor: '#0d6efd' },
+                        { label: 'Jumlah pemasangan', data: dataPemasangan, backgroundColor: '#4caf50' }
                     ] 
                 },
                 options: { 
-                    indexAxis: 'y', // TUKAR KEPADA MENDATAR (HORIZONTAL)
-                    scales: { 
-                        x: { beginAtZero: true } // Paksi X kini untuk nombor
-                    },
+                    indexAxis: 'y', 
+                    scales: { x: { beginAtZero: true } },
                     responsive: true,
-                    plugins: {
-                        legend: { 
-                            position: 'bottom', // Letak petunjuk (legend) di bawah
-                            labels: {
-                                font: { size: 11, weight: 'bold' }
-                            }
-                        }
-                    }
+                    plugins: { legend: { position: 'bottom', labels: { font: { size: 11, weight: 'bold' } } } }
                 }
             });
         })
@@ -624,7 +580,8 @@
     function prosesKad(id_bekas, jalan_blok_asal, status, next_r) {
         if (!latSemasa || !lngSemasa) { alert("GPS belum sedia."); return; }
         let lokaliti = document.getElementById("lokaliti_manifest").value.toUpperCase();
-        let tarikh = new Date().toLocaleDateString('en-GB'); let masa = new Date().toLocaleTimeString('en-US', { hour12: false });
+        let tarikh = new Date().toLocaleDateString('en-GB'); 
+        let masa = new Date().toLocaleTimeString('en-US', { hour12: false });
         let catatan_kad = document.getElementById("catatan-" + id_bekas).value.toUpperCase();
         
         let savedInfo = JSON.parse(localStorage.getItem("manifestInfo_V3")) || {negeri: "TIADA INFO", daerah: "TIADA INFO", organisasi: "TIADA INFO", nama_ketua: "TIADA INFO"};
@@ -633,11 +590,15 @@
         senaraiRekod.push({ negeri: savedInfo.negeri, daerah: savedInfo.daerah, lokaliti, organisasi: savedInfo.organisasi, nama_ketua: savedInfo.nama_ketua, jalan_blok: jalan_blok_asal, tarikh, masa, id_bekas, tindakan: "KUTIP", status, latitud: latSemasa, longitud: lngSemasa, CATATAN: catatan_kad });
         senaraiRekod.push({ negeri: savedInfo.negeri, daerah: savedInfo.daerah, lokaliti, organisasi: savedInfo.organisasi, nama_ketua: savedInfo.nama_ketua, jalan_blok: jalan_blok_asal, tarikh, masa, id_bekas, tindakan: "GANTI (R" + next_r + ")", status: "N/A", latitud: latSemasa, longitud: lngSemasa, CATATAN: catatan_kad });
         
-        if (!sejarahID[lokaliti]) sejarahID[lokaliti] = []; if (!sejarahID[lokaliti].includes(id_bekas)) sejarahID[lokaliti].push(id_bekas);
-        localStorage.setItem("sejarahID_V2", JSON.stringify(sejarahID)); localStorage.setItem("dataSO", JSON.stringify(senaraiRekod));
+        if (!sejarahID[lokaliti]) sejarahID[lokaliti] = []; 
+        if (!sejarahID[lokaliti].includes(id_bekas)) sejarahID[lokaliti].push(id_bekas);
+        
+        localStorage.setItem("sejarahID_V2", JSON.stringify(sejarahID)); 
+        localStorage.setItem("dataSO", JSON.stringify(senaraiRekod));
         kiraRekod();
         
-        let kad = document.getElementById("kad-" + id_bekas); kad.classList.add("selesai");
+        let kad = document.getElementById("kad-" + id_bekas); 
+        kad.classList.add("selesai");
         kad.querySelector(".selesai-teks").innerText = `✅ Disimpan: Status ${status} -> GANTI (R${next_r})`;
         if(status === "MUSNAH" || status === "HILANG") alert("⚠️ " + status + ". Sila letak bekas di spot baharu yang selamat.");
     }
@@ -725,12 +686,11 @@
     window.onload = function() { 
         dapatkanGPS(); 
         janaSenaraiID(); 
-        tarikSenaraiLokaliti(); // Panggil data Lokaliti Autocomplete
+        tarikSenaraiLokaliti(); 
         
         let savedManifest = localStorage.getItem("manifestData_V3"); 
         let savedLokaliti = localStorage.getItem("manifestLokaliti_V3");
         
-        // Memuatkan semula manifest yang tersimpan
         if (savedManifest && savedLokaliti) {
             document.getElementById("lokaliti_manifest").value = savedLokaliti;
             renderManifest(JSON.parse(savedManifest), savedLokaliti);
